@@ -29,6 +29,9 @@ const callGemini = async (prompt) => {
     if (!response.ok) {
       const errText = await response.text();
       console.error("Gemini API call failed status:", response.status, errText);
+      if (response.status === 429) {
+        return "QUOTA_EXHAUSTED";
+      }
       return null;
     }
 
@@ -48,6 +51,10 @@ export const translateText = async (text, targetLanguage) => {
 
   const prompt = `Translate the following text to ${targetLanguage}. Return ONLY the translation, nothing else:\n\n"${text}"`;
   const geminiResponse = await callGemini(prompt);
+
+  if (geminiResponse === "QUOTA_EXHAUSTED") {
+    return "AI service temporarily unavailable. The free Gemini API quota has been exhausted. Please try again later.";
+  }
 
   if (geminiResponse) {
     return geminiResponse.trim();
@@ -79,6 +86,10 @@ export const summarizeChat = async (messages) => {
   const prompt = `Summarize the following chat conversation into a concise bulleted list highlighting key discussion points and conclusions:\n\n${chatTranscript}`;
   const geminiResponse = await callGemini(prompt);
 
+  if (geminiResponse === "QUOTA_EXHAUSTED") {
+    return "Summary unavailable. The free Gemini API quota has been exhausted. Please try again later.";
+  }
+
   if (geminiResponse) {
     return geminiResponse;
   }
@@ -99,6 +110,10 @@ export const getSmartReplies = async (lastMessageText) => {
 
   const prompt = `Based on the following last message received in a chat, suggest exactly 3 short, natural-sounding, contextual quick-reply options for the user. Return ONLY a JSON array of strings, for example: ["Option 1", "Option 2", "Option 3"]:\n\n"${lastMessageText}"`;
   const geminiResponse = await callGemini(prompt);
+
+  if (geminiResponse === "QUOTA_EXHAUSTED") {
+    return [];
+  }
 
   if (geminiResponse) {
     try {
@@ -140,6 +155,10 @@ export const askAiAssistant = async (prompt, chatHistory = []) => {
   const fullPrompt = `${historyContext}\nSystem: You are Connectify AI, a premium chat assistant integrated inside the Connectify app. Respond concisely and professionally to the user's query.\nUser: ${prompt}\nAssistant:`;
 
   const geminiResponse = await callGemini(fullPrompt);
+
+  if (geminiResponse === "QUOTA_EXHAUSTED") {
+    return "AI service temporarily unavailable. The free Gemini API quota has been exhausted. Please try again later.";
+  }
 
   if (geminiResponse) {
     return geminiResponse;
