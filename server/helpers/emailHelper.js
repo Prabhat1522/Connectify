@@ -1,16 +1,22 @@
 import axios from "axios";
 
-const brevoClient = axios.create({
-  baseURL: "https://api.brevo.com/v3",
-  headers: {
-    "api-key": process.env.BREVO_API_KEY,
-    "Content-Type": "application/json",
-  },
-});
+const BREVO_URL = "https://api.brevo.com/v3/smtp/email";
+
+const sendBrevoEmail = (payload) => {
+  const apiKey = process.env.BREVO_API_KEY;
+  console.log("BREVO_API_KEY present:", !!apiKey);
+  return axios.post(BREVO_URL, payload, {
+    headers: {
+      "api-key": apiKey,
+      "Content-Type": "application/json",
+    },
+  });
+};
+
 
 export const sendOTPEmail = async (email, otp) => {
   try {
-    await brevoClient.post("/smtp/email", {
+    await sendBrevoEmail({
       sender: { name: "Connectify", email: "prabhat844502@gmail.com" },
       to: [{ email }],
       subject: "🔐 Your Connectify Verification Code",
@@ -38,7 +44,7 @@ export const sendOTPEmail = async (email, otp) => {
 
 export const sendAccountCreatedEmail = async (email, fullName) => {
   try {
-    await brevoClient.post("/smtp/email", {
+    await sendBrevoEmail({
       sender: { name: "Connectify", email: "prabhat844502@gmail.com" },
       to: [{ email }],
       subject: "🎉 Welcome to Connectify!",
@@ -76,7 +82,7 @@ export const sendAccountCreatedEmail = async (email, fullName) => {
 
 export const sendResetPasswordOTPEmail = async (email, otp) => {
   try {
-    await brevoClient.post("/smtp/email", {
+    await sendBrevoEmail({
       sender: { name: "Connectify", email: "prabhat844502@gmail.com" },
       to: [{ email }],
       subject: "🔑 Your Connectify Password Reset Code",
