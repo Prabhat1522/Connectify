@@ -1,25 +1,11 @@
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 
-const getTransporter = () => {
-  return nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 587,
-    secure: false, // Use STARTTLS (not SSL)
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-    tls: {
-      rejectUnauthorized: false, // Avoid TLS certificate handshake blocks in cloud hosting
-    },
-  });
-};
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export const sendOTPEmail = async (email, otp) => {
   try {
-    const transporter = getTransporter();
-    const mailOptions = {
-      from: `"Connectify" <${process.env.SMTP_USER}>`,
+    const { error } = await resend.emails.send({
+      from: "Connectify <onboarding@resend.dev>",
       to: email,
       subject: "🔐 Your Connectify Verification Code",
       html: `
@@ -36,9 +22,13 @@ export const sendOTPEmail = async (email, otp) => {
           <p style="font-size: 12px; color: #94a3b8; text-align: center;">— Connectify Team</p>
         </div>
       `,
-    };
+    });
 
-    await transporter.sendMail(mailOptions);
+    if (error) {
+      console.error("Resend sendOTPEmail error:", error);
+      throw new Error("Failed to send verification email.");
+    }
+
     console.log("Verification OTP sent successfully.");
   } catch (err) {
     console.error("Email verification error:", err.message);
@@ -48,9 +38,8 @@ export const sendOTPEmail = async (email, otp) => {
 
 export const sendAccountCreatedEmail = async (email, fullName) => {
   try {
-    const transporter = getTransporter();
-    const mailOptions = {
-      from: `"Connectify" <${process.env.SMTP_USER}>`,
+    const { error } = await resend.emails.send({
+      from: "Connectify <onboarding@resend.dev>",
       to: email,
       subject: "🎉 Welcome to Connectify!",
       html: `
@@ -62,7 +51,7 @@ export const sendAccountCreatedEmail = async (email, fullName) => {
 
           <div style="margin-top: 24px; background: #ffffff; padding: 24px; border-radius: 8px; border: 1px solid #f1f5f9;">
             <p style="font-size: 15px; color: #334155; line-height: 1.6;">
-              Your account has been **successfully verified and created**. Connectify is designed to be a premium, secure, and instant workspace for all your messaging needs.
+              Your account has been successfully verified and created. Connectify is designed to be a premium, secure, and instant workspace for all your messaging needs.
             </p>
             <p style="font-size: 15px; color: #334155; line-height: 1.6;">
               Start chatting, create channels/groups, customize your display themes, or try out our built-in AI assistant features!
@@ -78,10 +67,13 @@ export const sendAccountCreatedEmail = async (email, fullName) => {
           </p>
         </div>
       `,
-    };
+    });
 
-    await transporter.sendMail(mailOptions);
-    console.log("Account creation welcome email sent successfully.");
+    if (error) {
+      console.error("Resend sendAccountCreatedEmail error:", error);
+    } else {
+      console.log("Account creation welcome email sent successfully.");
+    }
   } catch (err) {
     console.error("Welcome email error:", err.message);
   }
@@ -89,9 +81,8 @@ export const sendAccountCreatedEmail = async (email, fullName) => {
 
 export const sendResetPasswordOTPEmail = async (email, otp) => {
   try {
-    const transporter = getTransporter();
-    const mailOptions = {
-      from: `"Connectify" <${process.env.SMTP_USER}>`,
+    const { error } = await resend.emails.send({
+      from: "Connectify <onboarding@resend.dev>",
       to: email,
       subject: "🔑 Your Connectify Password Reset Code",
       html: `
@@ -108,9 +99,13 @@ export const sendResetPasswordOTPEmail = async (email, otp) => {
           <p style="font-size: 12px; color: #94a3b8; text-align: center;">— Connectify Team</p>
         </div>
       `,
-    };
+    });
 
-    await transporter.sendMail(mailOptions);
+    if (error) {
+      console.error("Resend sendResetPasswordOTPEmail error:", error);
+      throw new Error("Failed to send password reset email.");
+    }
+
     console.log("Password reset OTP sent successfully.");
   } catch (err) {
     console.error("Email verification error:", err.message);
