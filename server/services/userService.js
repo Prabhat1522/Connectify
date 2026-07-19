@@ -18,7 +18,7 @@ export const createUserSignup = async (fullName, email, password, bio) => {
   const otp = crypto.randomInt(100000, 999999).toString();
   const otpExpiry = Date.now() + 5 * 60 * 1000; // 5 minutes validity
 
-  await sendOTPEmail(email, otp);
+  sendOTPEmail(email, otp).catch(err => console.error("Async sendOTPEmail error:", err.message));
 
   // Clean up any unverified signup attempt under same email
   await User.deleteOne({ email, isVerified: false });
@@ -57,7 +57,7 @@ export const verifyUserOTP = async (email, otp, password) => {
   await user.save();
   const token = generateToken(user._id);
 
-  await sendAccountCreatedEmail(user.email, user.fullName);
+  sendAccountCreatedEmail(user.email, user.fullName);
 
   return {
     token,
@@ -87,7 +87,7 @@ export const resendVerificationOTP = async (email) => {
   user.otpExpiry = Date.now() + 5 * 60 * 1000;
   await user.save();
 
-  await sendOTPEmail(email, otp);
+  sendOTPEmail(email, otp).catch(err => console.error("Async resendOTPEmail error:", err.message));
   return { message: "Verification OTP resent." };
 };
 
@@ -208,7 +208,7 @@ export const requestPasswordReset = async (email) => {
   user.otpExpiry = Date.now() + 5 * 60 * 1000; // 5 minutes validity
   await user.save();
 
-  await sendResetPasswordOTPEmail(email, otp);
+  sendResetPasswordOTPEmail(email, otp).catch(err => console.error("Async sendResetPasswordOTPEmail error:", err.message));
   return { message: "Password reset OTP sent to your email." };
 };
 
