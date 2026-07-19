@@ -15,26 +15,24 @@ export const createUserSignup = async (fullName, email, password, bio) => {
   const salt = await bcrypt.genSalt(10);
   const hashedPassword = await bcrypt.hash(password, salt);
 
-  const otp = crypto.randomInt(100000, 999999).toString();
-  const otpExpiry = Date.now() + 5 * 60 * 1000; // 5 minutes validity
-
-  console.log(`[DEBUG] OTP for ${email}: ${otp}`);
-  sendOTPEmail(email, otp).catch(err => console.error("Async sendOTPEmail error:", err.message));
-
-  // Clean up any unverified signup attempt under same email
-  await User.deleteOne({ email, isVerified: false });
+  // OTP temporarily disabled for deployment.
+  // Re-enable after configuring a verified email domain.
+  //
+  // const otp = crypto.randomInt(100000, 999999).toString();
+  // const otpExpiry = Date.now() + 5 * 60 * 1000;
+  // console.log(`[DEBUG] OTP for ${email}: ${otp}`);
+  // sendOTPEmail(email, otp).catch(err => console.error("Async sendOTPEmail error:", err.message));
+  // await User.deleteOne({ email, isVerified: false });
 
   await User.create({
     fullName,
     email,
     password: hashedPassword,
     bio,
-    otp,
-    otpExpiry,
-    isVerified: false,
+    isVerified: true, // Temporarily set to true — re-enable OTP to set false again
   });
 
-  return { message: "Verification OTP sent to your email." };
+  return { message: "Account created successfully." };
 };
 
 export const verifyUserOTP = async (email, otp, password) => {
@@ -99,9 +97,11 @@ export const loginUser = async (email, password) => {
     throw new ApiError(400, "Invalid email or password.");
   }
 
-  if (!user.isVerified) {
-    throw new ApiError(401, "Your account is not verified. Please register again.");
-  }
+  // OTP temporarily disabled for deployment.
+  // Re-enable after configuring a verified email domain.
+  // if (!user.isVerified) {
+  //   throw new ApiError(401, "Your account is not verified. Please register again.");
+  // }
 
   const isPasswordCorrect = await bcrypt.compare(password, user.password);
   if (!isPasswordCorrect) {

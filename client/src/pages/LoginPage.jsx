@@ -108,9 +108,14 @@ const LoginPage = () => {
         });
 
         if (res.data.success) {
-          toast.success("OTP sent successfully. Verify your email!");
-          setOtpSent(true);
-          setResendTimer(30);
+          // OTP temporarily disabled for deployment.
+          // Re-enable after configuring a verified email domain:
+          // toast.success("OTP sent successfully. Verify your email!");
+          // setOtpSent(true);
+          // setResendTimer(30);
+
+          toast.success("🎉 Account created! Logging you in...");
+          await login("login", { email, password });
         } else {
           toast.error(res.data.message);
           setIsDataSubmitted(false);
@@ -123,27 +128,28 @@ const LoginPage = () => {
       return;
     }
 
-    if (currState === "Sign Up" && otpSent) {
-      try {
-        setLoading(true);
-        const res = await axios.post("/api/auth/verify-otp", {
-          email,
-          otp,
-          password,
-        });
-
-        if (res.data.success) {
-          toast.success("🎉 Account created successfully!");
-          login("login", { email, password });
-        } else {
-          toast.error(res.data.message);
-        }
-      } catch (error) {
-        toast.error(error.response?.data?.message || "Verification failed.");
-      }
-      setLoading(false);
-      return;
-    }
+    // OTP temporarily disabled for deployment.
+    // Re-enable after configuring a verified email domain.
+    // if (currState === "Sign Up" && otpSent) {
+    //   try {
+    //     setLoading(true);
+    //     const res = await axios.post("/api/auth/verify-otp", {
+    //       email,
+    //       otp,
+    //       password,
+    //     });
+    //     if (res.data.success) {
+    //       toast.success("🎉 Account created successfully!");
+    //       login("login", { email, password });
+    //     } else {
+    //       toast.error(res.data.message);
+    //     }
+    //   } catch (error) {
+    //     toast.error(error.response?.data?.message || "Verification failed.");
+    //   }
+    //   setLoading(false);
+    //   return;
+    // }
 
     // Login process
     setLoading(true);
@@ -320,8 +326,9 @@ const LoginPage = () => {
             </div>
           )}
 
-          {/* Step 3 Sign Up: OTP input */}
-          {currState === "Sign Up" && otpSent && (
+          {/* Step 3 Sign Up: OTP input — temporarily disabled for deployment */}
+          {/* Re-enable after configuring a verified email domain */}
+          {/* {currState === "Sign Up" && otpSent && (
             <div className="space-y-3">
               <div className="relative flex items-center">
                 <ShieldCheck className="absolute left-3 w-4 h-4 text-gray-400" />
@@ -334,8 +341,6 @@ const LoginPage = () => {
                   required
                 />
               </div>
-
-              {/* Resend timer */}
               <div className="flex justify-between items-center text-xs text-gray-400 px-1">
                 {resendTimer > 0 ? (
                   <span>Resend code in {resendTimer}s</span>
@@ -351,7 +356,7 @@ const LoginPage = () => {
                 )}
               </div>
             </div>
-          )}
+          )} */}
 
           {/* Submit Button */}
           <button
@@ -364,7 +369,8 @@ const LoginPage = () => {
             ) : currState === "Forgot Password" ? (
               otpSent ? "Reset Password & Login" : "Send Reset OTP"
             ) : currState === "Sign Up" ? (
-              isDataSubmitted ? (otpSent ? "Verify & Register" : "Send Verification OTP") : "Next Step"
+              // OTP temporarily disabled: removed "Send Verification OTP" and "Verify & Register" steps
+              isDataSubmitted ? "Create Account" : "Next Step"
             ) : (
               "Login to Workspace"
             )}
