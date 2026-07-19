@@ -53,3 +53,32 @@ export const validateVerifyOTP = (req, res, next) => {
 
   next();
 };
+
+export const validateForgotPassword = (req, res, next) => {
+  const { email } = req.body;
+
+  if (!email || !/\S+@\S+\.\S+/.test(email)) {
+    throw new ApiError(400, "A valid email address is required.");
+  }
+
+  next();
+};
+
+export const validateResetPassword = (req, res, next) => {
+  const { email, otp, newPassword } = req.body;
+
+  if (!email || !/\S+@\S+\.\S+/.test(email)) {
+    throw new ApiError(400, "A valid email address is required.");
+  }
+
+  if (!otp || otp.length !== 6) {
+    throw new ApiError(400, "A 6-digit OTP is required.");
+  }
+
+  if (!newPassword || newPassword.length < 6) {
+    throw new ApiError(400, "New password is required and must be at least 6 characters long.");
+  }
+
+  next();
+};
+

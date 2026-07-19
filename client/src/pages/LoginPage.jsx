@@ -35,7 +35,8 @@ const LoginPage = () => {
   const resendOtp = async () => {
     try {
       setResendLoading(true);
-      const res = await axios.post("/api/auth/resend-otp", { email });
+      const endpoint = currState === "Forgot Password" ? "/api/auth/forgot-password" : "/api/auth/resend-otp";
+      const res = await axios.post(endpoint, { email });
 
       if (res.data.success) {
         toast.success("OTP code resent to your email.");
@@ -51,6 +52,45 @@ const LoginPage = () => {
 
   const onSubmitHandler = async (event) => {
     event.preventDefault();
+
+    if (currState === "Forgot Password") {
+      if (!otpSent) {
+        try {
+          setLoading(true);
+          const res = await axios.post("/api/auth/forgot-password", { email });
+          if (res.data.success) {
+            toast.success("Password reset OTP sent to your email.");
+            setOtpSent(true);
+            setResendTimer(30);
+          } else {
+            toast.error(res.data.message);
+          }
+        } catch (error) {
+          toast.error(error.response?.data?.message || "Failed to send reset OTP.");
+        }
+        setLoading(false);
+      } else {
+        try {
+          setLoading(true);
+          const res = await axios.post("/api/auth/reset-password", {
+            email,
+            otp,
+            newPassword: password,
+          });
+          if (res.data.success) {
+            toast.success("Password reset successfully!");
+            // Log in with the new credentials
+            await login("login", { email, password });
+          } else {
+            toast.error(res.data.message);
+          }
+        } catch (error) {
+          toast.error(error.response?.data?.message || "Failed to reset password.");
+        }
+        setLoading(false);
+      }
+      return;
+    }
 
     if (currState === "Sign Up" && !isDataSubmitted) {
       setIsDataSubmitted(true);
@@ -128,7 +168,11 @@ const LoginPage = () => {
             Connectify
           </h1>
           <p className="text-xs text-gray-400 mt-1.5">
-            {currState === "Sign Up" ? "Create your developer-ready space" : "Welcome back to your workspace"}
+            {currState === "Forgot Password"
+              ? "Reset your account password"
+              : currState === "Sign Up"
+              ? "Create your developer-ready space"
+              : "Welcome back to your workspace"}
           </p>
         </div>
 
@@ -149,8 +193,8 @@ const LoginPage = () => {
             </div>
           )}
 
-          {/* Email and Password inputs (Only shown before submission/verification) */}
-          {!isDataSubmitted && (
+          {/* Email and Password inputs (Only shown before submission/verification for standard flows) */}
+          {!isDataSubmitted && currState !== "Forgot Password" && (
             <>
               <div className="relative flex items-center">
                 <Mail className="absolute left-3 w-4 h-4 text-gray-400" />
@@ -174,7 +218,92 @@ const LoginPage = () => {
                   required
                 />
               </div>
+              {currState === "Login" && (
+                <div className="flex justify-end text-xs px-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCurrState("Forgot Password");
+                      setOtpSent(false);
+                      setIsDataSubmitted(false);
+                      setEmail("");
+                      setPassword("");
+                      setOtp("");
+                    }}
+                    className="text-violet-400 hover:underline font-medium cursor-pointer bg-transparent border-none"
+                  >
+                    Forgot password?
+                  </button>
+                </div>
+              )}
             </>
+          )}
+
+          {/* Forgot Password Step 1: Request OTP */}
+          {currState === "Forgot Password" && !otpSent && (
+            <div className="space-y-4">
+              <p className="text-xs text-gray-400 text-center mb-2">
+                Enter your registered email address to receive a 6-digit password reset OTP code.
+              </p>
+              <div className="relative flex items-center">
+                <Mail className="absolute left-3 w-4 h-4 text-gray-400" />
+                <input
+                  onChange={(e) => setEmail(e.target.value)}
+                  value={email}
+                  type="email"
+                  placeholder="Email Address"
+                  className="w-full bg-white/5 border border-white/10 rounded-lg py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:border-violet-500 transition text-white"
+                  required
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Forgot Password Step 2: Verification Code & New Password */}
+          {currState === "Forgot Password" && otpSent && (
+            <div className="space-y-4">
+              <p className="text-xs text-gray-400 text-center mb-2">
+                Enter the 6-digit verification code sent to your email and your new password.
+              </p>
+              <div className="relative flex items-center">
+                <ShieldCheck className="absolute left-3 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Enter 6-digit OTP code"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 rounded-lg py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:border-violet-500 transition text-white"
+                  required
+                />
+              </div>
+              <div className="relative flex items-center">
+                <Lock className="absolute left-3 w-4 h-4 text-gray-400" />
+                <input
+                  onChange={(e) => setPassword(e.target.value)}
+                  value={password}
+                  type="password"
+                  placeholder="New Password"
+                  className="w-full bg-white/5 border border-white/10 rounded-lg py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:border-violet-500 transition text-white"
+                  required
+                />
+              </div>
+
+              {/* Resend timer */}
+              <div className="flex justify-between items-center text-xs text-gray-400 px-1">
+                {resendTimer > 0 ? (
+                  <span>Resend code in {resendTimer}s</span>
+                ) : (
+                  <button
+                    type="button"
+                    disabled={resendLoading}
+                    onClick={resendOtp}
+                    className="text-violet-400 font-semibold hover:underline cursor-pointer disabled:opacity-50"
+                  >
+                    {resendLoading ? "Resending..." : "Resend Code"}
+                  </button>
+                )}
+              </div>
+            </div>
           )}
 
           {/* Step 2 Sign Up: Bio (TextArea) */}
@@ -232,6 +361,8 @@ const LoginPage = () => {
           >
             {loading ? (
               <Loader2 className="w-5 h-5 animate-spin" />
+            ) : currState === "Forgot Password" ? (
+              otpSent ? "Reset Password & Login" : "Send Reset OTP"
             ) : currState === "Sign Up" ? (
               isDataSubmitted ? (otpSent ? "Verify & Register" : "Send Verification OTP") : "Next Step"
             ) : (
@@ -241,7 +372,26 @@ const LoginPage = () => {
 
           {/* Switch States options */}
           <div className="text-center pt-2">
-            {currState === "Sign Up" ? (
+            {currState === "Forgot Password" ? (
+              <p className="text-xs text-gray-500">
+                Remember your password?{" "}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCurrState("Login");
+                    setIsDataSubmitted(false);
+                    setOtpSent(false);
+                    setResendTimer(0);
+                    setEmail("");
+                    setPassword("");
+                    setOtp("");
+                  }}
+                  className="text-violet-400 font-semibold hover:underline cursor-pointer"
+                >
+                  Log in
+                </button>
+              </p>
+            ) : currState === "Sign Up" ? (
               <p className="text-xs text-gray-500">
                 Already have an account?{" "}
                 <button

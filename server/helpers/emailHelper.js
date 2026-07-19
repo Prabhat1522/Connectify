@@ -81,3 +81,35 @@ export const sendAccountCreatedEmail = async (email, fullName) => {
     console.error("Welcome email error:", err.message);
   }
 };
+
+export const sendResetPasswordOTPEmail = async (email, otp) => {
+  try {
+    const transporter = getTransporter();
+    const mailOptions = {
+      from: `"Connectify" <${process.env.SMTP_USER}>`,
+      to: email,
+      subject: "🔑 Your Connectify Password Reset Code",
+      html: `
+        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 500px; margin: auto; padding: 30px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
+          <h2 style="color: #6366f1; text-align: center; margin-bottom: 24px;">Connectify</h2>
+          <p style="color: #334155; font-size: 16px; line-height: 1.5;">Hi there,</p>
+          <p style="color: #334155; font-size: 15px; line-height: 1.5;">We received a request to reset the password for your Connectify account. Please use the following One-Time Password (OTP) to proceed with resetting your password:</p>
+          <div style="background-color: #f1f5f9; padding: 15px; border-radius: 8px; text-align: center; margin: 24px 0;">
+            <h1 style="color: #4f46e5; letter-spacing: 4px; font-size: 32px; margin: 0;">${otp}</h1>
+          </div>
+          <p style="color: #64748b; font-size: 14px; line-height: 1.5;">This code is valid for <strong>5 minutes</strong>. Do not share this OTP with anyone. If you did not request a password reset, you can safely ignore this email.</p>
+          <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
+          <p style="font-size: 12px; color: #94a3b8; text-align: center;">If you have any questions, please contact our support team.</p>
+          <p style="font-size: 12px; color: #94a3b8; text-align: center;">— Connectify Team</p>
+        </div>
+      `,
+    };
+
+    await transporter.sendMail(mailOptions);
+    console.log("Password reset OTP sent successfully.");
+  } catch (err) {
+    console.error("Email verification error:", err.message);
+    throw new Error("Failed to send password reset email.");
+  }
+};
+

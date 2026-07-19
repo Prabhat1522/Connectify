@@ -3,7 +3,7 @@ import ApiError from "../utils/apiError.js";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { generateToken } from "../helpers/tokenHelper.js";
-import { sendOTPEmail, sendAccountCreatedEmail } from "../helpers/emailHelper.js";
+import { sendOTPEmail, sendAccountCreatedEmail, sendResetPasswordOTPEmail } from "../helpers/emailHelper.js";
 import cloudinary from "../config/cloudinary.js";
 
 export const createUserSignup = async (fullName, email, password, bio) => {
@@ -192,3 +192,44 @@ export const reportUser = async (userId, targetId) => {
   }
   return { message: "User reported successfully." };
 };
+
+export const requestPasswordReset = async (email) => {
+  const user = await User.findOne({ email });
+  if (!user) {
+    throw new ApiError(404, "No account registered with this email address.");
+  }
+
+  if (!user.isVerified) {
+    throw new ApiError(400, "This account is not verified yet. Please sign up first.");
+  }
+
+  const otp = crypto.randomInt(100000, 999999).toString();
+  user.otp = otp;
+  user.otpExpiry = Date.now() + 5 * 60 * 1000; // 5 minutes validity
+  await user.save();
+
+  await sendResetPasswordOTPEmail(email, otp);
+  return { message: "Password reset OTP sent to your email." };
+};
+
+export const resetUserPassword = async (email, otp, newPassword) => {
+  const user = await User.findOne({ email });
+  if (!user) {
+    throw new ApiError(404, "No account registered with this email address.");
+  }
+
+  if (user.otp !== otp || user.otpExpiry < Date.now()) {
+    throw new ApiError(400, "The OTP code provided is invalid or has expired.");
+  }
+
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+  user.password = hashedPassword;
+  user.otp = undefined;
+  user.otpExpiry = undefined;
+  await user.save();
+
+  return { message: "Password reset successfully." };
+};
+

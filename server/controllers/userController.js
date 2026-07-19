@@ -78,3 +78,23 @@ export const report = async (req, res, next) => {
     next(error);
   }
 };
+
+export const forgotPassword = async (req, res, next) => {
+  const { email } = req.body;
+  try {
+    const result = await userService.requestPasswordReset(email);
+    return ApiResponse.success(res, result.message, null, 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const resetPassword = async (req, res, next) => {
+  const { email, otp, newPassword } = req.body;
+  try {
+    const result = await userService.resetUserPassword(email, otp, newPassword);
+    return ApiResponse.success(res, result.message, null, 200);
+  } catch (error) {
+    next(error);
+  }
+};
