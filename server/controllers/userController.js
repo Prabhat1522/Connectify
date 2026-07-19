@@ -98,3 +98,13 @@ export const resetPassword = async (req, res, next) => {
     next(error);
   }
 };
+
+export const changePassword = async (req, res, next) => {
+  const { currentPassword, newPassword } = req.body;
+  try {
+    const result = await userService.changeUserPassword(req.user._id, currentPassword, newPassword);
+    return ApiResponse.success(res, result.message, null, 200);
+  } catch (error) {
+    next(error);
+  }
+};

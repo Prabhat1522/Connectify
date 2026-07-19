@@ -82,3 +82,18 @@ export const validateResetPassword = (req, res, next) => {
   next();
 };
 
+export const validateChangePassword = (req, res, next) => {
+  const { currentPassword, newPassword } = req.body;
+
+  if (!currentPassword) {
+    throw new ApiError(400, "Current password is required.");
+  }
+
+  if (!newPassword || newPassword.length < 6) {
+    throw new ApiError(400, "New password is required and must be at least 6 characters long.");
+  }
+
+  next();
+};
+
+

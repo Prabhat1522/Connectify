@@ -233,3 +233,28 @@ export const resetUserPassword = async (email, otp, newPassword) => {
   return { message: "Password reset successfully." };
 };
 
+export const changeUserPassword = async (userId, currentPassword, newPassword) => {
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new ApiError(404, "User not found.");
+  }
+
+  const isMatch = await bcrypt.compare(currentPassword, user.password);
+  if (!isMatch) {
+    throw new ApiError(400, "Incorrect current password.");
+  }
+
+  if (currentPassword === newPassword) {
+    throw new ApiError(400, "New password must be different from your current password.");
+  }
+
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+  user.password = hashedPassword;
+  await user.save();
+
+  return { message: "Password updated successfully." };
+};
+
+

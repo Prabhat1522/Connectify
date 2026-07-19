@@ -1,8 +1,10 @@
 import React, { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import toast from "react-hot-toast";
 import assets from "../assets/assets";
 import { AuthContext } from "../../contex/AuthContex";
-import { ArrowLeft, Camera, Palette, User, MessageCircle, RefreshCw } from "lucide-react";
+import { ArrowLeft, Camera, Palette, User, MessageCircle, RefreshCw, Lock } from "lucide-react";
 
 const ProfilePage = () => {
   const { authUser, updateProfile } = useContext(AuthContext);
@@ -13,6 +15,13 @@ const ProfilePage = () => {
   const [themePref, setThemePref] = useState(authUser?.themePreference || "dark");
   const [accentColor, setAccentColor] = useState(authUser?.accentColor || "#8b5cf6");
   const [saving, setSaving] = useState(false);
+
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+
   const navigate = useNavigate();
 
   const colorPresets = [
@@ -51,6 +60,38 @@ const ProfilePage = () => {
     }
   };
 
+  const handlePasswordChange = async (e) => {
+    e.preventDefault();
+    if (newPassword.length < 6) {
+      toast.error("New password must be at least 6 characters long.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error("New passwords do not match.");
+      return;
+    }
+    try {
+      setPasswordLoading(true);
+      const { data } = await axios.put("/api/auth/change-password", {
+        currentPassword,
+        newPassword,
+      });
+      if (data.success) {
+        toast.success(data.message || "Password updated successfully!");
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+        setShowModal(false);
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to change password.");
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-y-auto">
       {/* Background Decorative Blobs */}
@@ -72,7 +113,7 @@ const ProfilePage = () => {
           </h2>
         </div>
 
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-[1.2fr_1.8fr] gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-[1.2fr_1.8fr] gap-8">
           
           {/* Left Column: Avatar upload + Theme preferences */}
           <div className="flex flex-col items-center gap-6 border-b md:border-b-0 md:border-r border-white/10 pb-6 md:pb-0 md:pr-8">
@@ -147,58 +188,166 @@ const ProfilePage = () => {
             </div>
           </div>
 
-          {/* Right Column: Personal details form */}
-          <div className="flex flex-col gap-5">
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-gray-400 flex items-center gap-1.5 uppercase tracking-wider">
-                <User className="w-3.5 h-3.5" /> Display Name
-              </label>
-              <input
-                type="text"
-                required
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Enter display name"
-                className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-sm focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition text-white"
-              />
-            </div>
+          {/* Right Column: Personal details form + Password reset form */}
+          <div className="flex flex-col gap-6">
+            
+            {/* Profile update form */}
+            <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-gray-400 flex items-center gap-1.5 uppercase tracking-wider">
+                  <User className="w-3.5 h-3.5" /> Display Name
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Enter display name"
+                  className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-sm focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition text-white"
+                />
+              </div>
 
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-gray-400 flex items-center gap-1.5 uppercase tracking-wider">
-                <MessageCircle className="w-3.5 h-3.5" /> Custom Status message
-              </label>
-              <input
-                type="text"
-                value={customStatus}
-                onChange={(e) => setCustomStatus(e.target.value)}
-                placeholder="What's on your mind?"
-                className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-sm focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition text-white"
-              />
-            </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-gray-400 flex items-center gap-1.5 uppercase tracking-wider">
+                  <MessageCircle className="w-3.5 h-3.5" /> Custom Status message
+                </label>
+                <input
+                  type="text"
+                  value={customStatus}
+                  onChange={(e) => setCustomStatus(e.target.value)}
+                  placeholder="What's on your mind?"
+                  className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-sm focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition text-white"
+                />
+              </div>
 
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                About / Bio
-              </label>
-              <textarea
-                required
-                rows={4}
-                value={bio}
-                onChange={(e) => setBio(e.target.value)}
-                placeholder="Write a brief bio about yourself..."
-                className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-sm focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition text-white resize-none"
-              />
-            </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  About / Bio
+                </label>
+                <textarea
+                  required
+                  rows={4}
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                  placeholder="Write a brief bio about yourself..."
+                  className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-sm focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition text-white resize-none"
+                />
+              </div>
 
-            <button
-              type="submit"
-              disabled={saving}
-              className="mt-4 w-full py-3 bg-gradient-to-r from-violet-500 to-indigo-600 hover:from-violet-600 hover:to-indigo-700 text-white rounded-lg font-medium cursor-pointer shadow-lg flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.99] transition disabled:opacity-50"
-            >
-              {saving ? <RefreshCw className="w-5 h-5 animate-spin" /> : "Save Changes"}
-            </button>
+              <button
+                type="submit"
+                disabled={saving}
+                className="mt-2 w-full py-3 bg-gradient-to-r from-violet-500 to-indigo-600 hover:from-violet-600 hover:to-indigo-700 text-white rounded-lg font-medium cursor-pointer shadow-lg flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.99] transition disabled:opacity-50"
+              >
+                {saving ? <RefreshCw className="w-5 h-5 animate-spin" /> : "Save Changes"}
+              </button>
+            </form>
+
+            {/* Security Section */}
+            <div className="mt-2 border-t border-white/10 pt-6 flex flex-col gap-3">
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
+                🔒 Security
+              </h3>
+              <p className="text-xs text-gray-400">
+                Keep your account secure by updating your password regularly.
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowModal(true);
+                  setCurrentPassword("");
+                  setNewPassword("");
+                  setConfirmPassword("");
+                }}
+                className="w-full py-2.5 bg-white/10 hover:bg-white/15 text-white border border-white/10 rounded-lg font-medium cursor-pointer flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.99] transition"
+              >
+                Change Password
+              </button>
+            </div>
+            
           </div>
-        </form>
+        </div>
+
+        {/* Centered Modal Dialog */}
+        {showModal && (
+          <div 
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in"
+            onClick={() => setShowModal(false)}
+          >
+            <div 
+              className="w-full max-w-md glass-panel text-white border border-white/10 rounded-2xl p-6 sm:p-8 shadow-2xl animate-pop-in"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-6 pb-2 border-b border-white/10">
+                <h2 className="text-lg font-bold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-indigo-300 flex items-center gap-2">
+                  <Lock className="w-5 h-5 text-violet-400" /> Change Password
+                </h2>
+              </div>
+
+              <form onSubmit={handlePasswordChange} className="space-y-4">
+                <div className="flex flex-col gap-1.5 text-left">
+                  <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                    Current Password
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    placeholder="Enter current password"
+                    className="w-full bg-white/5 border border-white/10 rounded-lg p-2.5 text-sm focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition text-white"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5 text-left">
+                  <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                    New Password
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Enter new password (min 6 chars)"
+                    className="w-full bg-white/5 border border-white/10 rounded-lg p-2.5 text-sm focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition text-white"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5 text-left">
+                  <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                    Confirm New Password
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Confirm new password"
+                    className="w-full bg-white/5 border border-white/10 rounded-lg p-2.5 text-sm focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition text-white"
+                  />
+                </div>
+
+                <div className="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-white/10">
+                  <button
+                    type="button"
+                    onClick={() => setShowModal(false)}
+                    className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white border border-white/5 rounded-lg text-sm font-medium cursor-pointer transition"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={passwordLoading}
+                    className="px-4 py-2 bg-gradient-to-r from-violet-500 to-indigo-600 hover:from-violet-600 hover:to-indigo-700 text-white rounded-lg text-sm font-medium cursor-pointer shadow-lg flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.99] transition disabled:opacity-50"
+                  >
+                    {passwordLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : "Update Password"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   );

@@ -10,6 +10,7 @@ import {
   report,
   forgotPassword,
   resetPassword,
+  changePassword,
 } from "../controllers/userController.js";
 import { protectRoute } from "../middleware/auth.js";
 import {
@@ -18,6 +19,7 @@ import {
   validateVerifyOTP,
   validateForgotPassword,
   validateResetPassword,
+  validateChangePassword,
 } from "../validators/authValidator.js";
 
 const userRouter = express.Router();
@@ -30,6 +32,7 @@ userRouter.post("/forgot-password", validateForgotPassword, forgotPassword);
 userRouter.post("/reset-password", validateResetPassword, resetPassword);
 
 userRouter.put("/update-profile", protectRoute, updateProfile);
+userRouter.put("/change-password", protectRoute, validateChangePassword, changePassword);
 userRouter.get("/check", protectRoute, checkAuth);
 
 userRouter.post("/block/:id", protectRoute, toggleBlock);
