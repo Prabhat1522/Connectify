@@ -1,14 +1,20 @@
-import { Resend } from "resend";
+import axios from "axios";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const brevoClient = axios.create({
+  baseURL: "https://api.brevo.com/v3",
+  headers: {
+    "api-key": process.env.BREVO_API_KEY,
+    "Content-Type": "application/json",
+  },
+});
 
 export const sendOTPEmail = async (email, otp) => {
   try {
-    const { error } = await resend.emails.send({
-      from: "Connectify <onboarding@resend.dev>",
-      to: email,
+    await brevoClient.post("/smtp/email", {
+      sender: { name: "Connectify", email: "prabhat844502@gmail.com" },
+      to: [{ email }],
       subject: "🔐 Your Connectify Verification Code",
-      html: `
+      htmlContent: `
         <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 500px; margin: auto; padding: 30px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
           <h2 style="color: #6366f1; text-align: center; margin-bottom: 24px;">Connectify</h2>
           <p style="color: #334155; font-size: 16px; line-height: 1.5;">Hi there,</p>
@@ -23,26 +29,20 @@ export const sendOTPEmail = async (email, otp) => {
         </div>
       `,
     });
-
-    if (error) {
-      console.error("Resend sendOTPEmail error:", error);
-      throw new Error("Failed to send verification email.");
-    }
-
-    console.log("Verification OTP sent successfully.");
+    console.log("Verification OTP sent successfully via Brevo.");
   } catch (err) {
-    console.error("Email verification error:", err.message);
+    console.error("Brevo sendOTPEmail error:", err.response?.data || err.message);
     throw new Error("Failed to send verification email.");
   }
 };
 
 export const sendAccountCreatedEmail = async (email, fullName) => {
   try {
-    const { error } = await resend.emails.send({
-      from: "Connectify <onboarding@resend.dev>",
-      to: email,
+    await brevoClient.post("/smtp/email", {
+      sender: { name: "Connectify", email: "prabhat844502@gmail.com" },
+      to: [{ email }],
       subject: "🎉 Welcome to Connectify!",
-      html: `
+      htmlContent: `
         <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: auto; background-color: #f8fafc; border-radius: 12px; padding: 30px; border: 1px solid #e2e8f0;">
           <div style="text-align: center;">
             <h1 style="color: #10b981; margin-bottom: 8px;">Welcome to Connectify, ${fullName}!</h1>
@@ -68,24 +68,19 @@ export const sendAccountCreatedEmail = async (email, fullName) => {
         </div>
       `,
     });
-
-    if (error) {
-      console.error("Resend sendAccountCreatedEmail error:", error);
-    } else {
-      console.log("Account creation welcome email sent successfully.");
-    }
+    console.log("Account creation welcome email sent successfully via Brevo.");
   } catch (err) {
-    console.error("Welcome email error:", err.message);
+    console.error("Brevo sendAccountCreatedEmail error:", err.response?.data || err.message);
   }
 };
 
 export const sendResetPasswordOTPEmail = async (email, otp) => {
   try {
-    const { error } = await resend.emails.send({
-      from: "Connectify <onboarding@resend.dev>",
-      to: email,
+    await brevoClient.post("/smtp/email", {
+      sender: { name: "Connectify", email: "prabhat844502@gmail.com" },
+      to: [{ email }],
       subject: "🔑 Your Connectify Password Reset Code",
-      html: `
+      htmlContent: `
         <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 500px; margin: auto; padding: 30px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
           <h2 style="color: #6366f1; text-align: center; margin-bottom: 24px;">Connectify</h2>
           <p style="color: #334155; font-size: 16px; line-height: 1.5;">Hi there,</p>
@@ -100,16 +95,9 @@ export const sendResetPasswordOTPEmail = async (email, otp) => {
         </div>
       `,
     });
-
-    if (error) {
-      console.error("Resend sendResetPasswordOTPEmail error:", error);
-      throw new Error("Failed to send password reset email.");
-    }
-
-    console.log("Password reset OTP sent successfully.");
+    console.log("Password reset OTP sent successfully via Brevo.");
   } catch (err) {
-    console.error("Email verification error:", err.message);
+    console.error("Brevo sendResetPasswordOTPEmail error:", err.response?.data || err.message);
     throw new Error("Failed to send password reset email.");
   }
 };
-
