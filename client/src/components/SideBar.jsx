@@ -123,7 +123,7 @@ const SideBar = () => {
 
   return (
     <div
-      className={`bg-black/20 border-r border-white/5 h-full flex flex-col rounded-l-xl text-white ${
+      className={`bg-black/20 border-r border-white/5 h-full max-h-full overflow-hidden flex flex-col rounded-l-xl text-white ${
         selectedUser || selectedGroup ? "max-md:hidden" : "w-full"
       }`}
     >
