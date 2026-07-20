@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from "react";
 import { AuthContext } from "../../contex/AuthContex";
 import axios from "axios";
 import toast from "react-hot-toast";
-import { Loader2, Mail, Lock, User, MessageSquare, Compass, ShieldCheck } from "lucide-react";
+import { Loader2, Mail, Lock, User, MessageSquare, Compass, ShieldCheck, Eye, EyeOff } from "lucide-react";
 
 const LoginPage = () => {
   const [currState, setCurrState] = useState("Login"); // Login, Sign Up
@@ -14,6 +14,7 @@ const LoginPage = () => {
   const [otpSent, setOtpSent] = useState(false);
   const [isDataSubmitted, setIsDataSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Resend OTP state
   const [resendTimer, setResendTimer] = useState(0);
@@ -218,11 +219,18 @@ const LoginPage = () => {
                 <input
                   onChange={(e) => setPassword(e.target.value)}
                   value={password}
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   placeholder="Password"
-                  className="w-full bg-white/5 border border-white/10 rounded-lg py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:border-violet-500 transition text-white"
+                  className="w-full bg-white/5 border border-white/10 rounded-lg py-2.5 pl-10 pr-10 text-sm focus:outline-none focus:border-violet-500 transition text-white"
                   required
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 p-1 hover:bg-white/5 rounded-full text-gray-400 hover:text-white transition cursor-pointer flex items-center justify-center"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
               {currState === "Login" && (
                 <div className="flex justify-end text-xs px-1">
@@ -235,6 +243,7 @@ const LoginPage = () => {
                       setEmail("");
                       setPassword("");
                       setOtp("");
+                      setShowPassword(false);
                     }}
                     className="text-violet-400 hover:underline font-medium cursor-pointer bg-transparent border-none"
                   >
@@ -287,11 +296,18 @@ const LoginPage = () => {
                 <input
                   onChange={(e) => setPassword(e.target.value)}
                   value={password}
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   placeholder="New Password"
-                  className="w-full bg-white/5 border border-white/10 rounded-lg py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:border-violet-500 transition text-white"
+                  className="w-full bg-white/5 border border-white/10 rounded-lg py-2.5 pl-10 pr-10 text-sm focus:outline-none focus:border-violet-500 transition text-white"
                   required
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 p-1 hover:bg-white/5 rounded-full text-gray-400 hover:text-white transition cursor-pointer flex items-center justify-center"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
 
               {/* Resend timer */}
@@ -391,6 +407,7 @@ const LoginPage = () => {
                     setEmail("");
                     setPassword("");
                     setOtp("");
+                    setShowPassword(false);
                   }}
                   className="text-violet-400 font-semibold hover:underline cursor-pointer"
                 >
@@ -407,6 +424,7 @@ const LoginPage = () => {
                     setIsDataSubmitted(false);
                     setOtpSent(false);
                     setResendTimer(0);
+                    setShowPassword(false);
                   }}
                   className="text-violet-400 font-semibold hover:underline cursor-pointer"
                 >
@@ -418,7 +436,10 @@ const LoginPage = () => {
                 Don't have an account?{" "}
                 <button
                   type="button"
-                  onClick={() => setCurrState("Sign Up")}
+                  onClick={() => {
+                    setCurrState("Sign Up");
+                    setShowPassword(false);
+                  }}
                   className="text-violet-400 font-semibold hover:underline cursor-pointer"
                 >
                   Create one
