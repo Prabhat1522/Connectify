@@ -1,4 +1,5 @@
 import Group from "../models/Group.js";
+import Message from "../models/Message.js";
 import ApiError from "../utils/apiError.js";
 import crypto from "crypto";
 import cloudinary from "../config/cloudinary.js";
@@ -87,4 +88,25 @@ export const updateGroupDetails = async (userId, groupId, updateData) => {
 
   await group.save();
   return group.populate("members admins", "fullName email profilePic bio customStatus");
+};
+
+export const deleteGroup = async (userId, groupId) => {
+  const group = await Group.findById(groupId);
+  if (!group) {
+    throw new ApiError(404, "Group not found.");
+  }
+
+  // Only admins can delete the group
+  const isAdmin = group.admins.some((adminId) => adminId.toString() === userId.toString());
+  if (!isAdmin) {
+    throw new ApiError(403, "Only group administrators can delete this group.");
+  }
+
+  // Delete all messages associated with the group
+  await Message.deleteMany({ groupId });
+
+  // Delete the group itself
+  await Group.findByIdAndDelete(groupId);
+
+  return { message: "Group deleted successfully." };
 };

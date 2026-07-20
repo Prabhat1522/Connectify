@@ -11,11 +11,12 @@ import {
   Image as ImageIcon,
   Bot,
   ExternalLink,
+  Trash2,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
 const RightSidebar = () => {
-  const { selectedUser, selectedGroup, messages } = useContext(ChatContext);
+  const { selectedUser, selectedGroup, messages, deleteGroup } = useContext(ChatContext);
   const { logout, onlineUsers, authUser, toggleBlockUser, reportUser } = useContext(AuthContext);
   const [msgImages, setMsgImages] = useState([]);
   const [copiedLink, setCopiedLink] = useState(false);
@@ -25,6 +26,20 @@ const RightSidebar = () => {
       messages.filter((msg) => msg.image).map((msg) => msg.image)
     );
   }, [messages]);
+
+  const isAdmin = selectedGroup?.admins?.some(
+    (admin) => (admin._id || admin) === authUser?._id
+  );
+
+  const handleDeleteGroup = async () => {
+    if (!selectedGroup) return;
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete the group "${selectedGroup.name}"? This will delete all messages and remove all members.`
+    );
+    if (confirmDelete) {
+      await deleteGroup(selectedGroup._id);
+    }
+  };
 
   const copyInviteCode = () => {
     if (selectedGroup?.inviteLink) {
@@ -162,6 +177,19 @@ const RightSidebar = () => {
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* Group Administration Action */}
+        {isAdmin && (
+          <div className="mt-auto pt-4">
+            <button
+              onClick={handleDeleteGroup}
+              className="w-full py-2.5 rounded-lg border border-red-500/20 bg-red-500/10 text-red-400 hover:bg-red-500/20 text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer transition"
+            >
+              <Trash2 className="w-4 h-4" />
+              Delete Group
+            </button>
           </div>
         )}
       </div>

@@ -69,3 +69,17 @@ export const updateGroup = async (req, res, next) => {
     next(error);
   }
 };
+
+export const deleteGroup = async (req, res, next) => {
+  const { groupId } = req.params;
+  try {
+    await groupService.deleteGroup(req.user._id, groupId);
+    
+    // Broadcast to all connected sockets in group room
+    io.to(groupId).emit("groupDeleted", { groupId });
+
+    return ApiResponse.success(res, "Group deleted successfully.", null, 200);
+  } catch (error) {
+    next(error);
+  }
+};

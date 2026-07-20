@@ -318,6 +318,16 @@ export const ChatProvider = ({ children }) => {
         )
       );
     });
+
+    // Listen for group deletion
+    socket.on("groupDeleted", (data) => {
+      // data: { groupId }
+      setGroups((prev) => prev.filter((g) => g._id !== data.groupId));
+      if (selectedGroup && selectedGroup._id === data.groupId) {
+        setSelectedGroup(null);
+        toast.error("This group has been deleted by the administrator.");
+      }
+    });
   };
 
   const unsubscribeFromSocketEvents = () => {
@@ -329,6 +339,7 @@ export const ChatProvider = ({ children }) => {
     socket.off("messageEdit");
     socket.off("messageDelete");
     socket.off("messagePin");
+    socket.off("groupDeleted");
   };
 
   // Join rooms when group list changes or groups load
@@ -362,6 +373,23 @@ export const ChatProvider = ({ children }) => {
     setSelectedGroup(null);
   };
 
+  const deleteGroup = async (groupId) => {
+    try {
+      const { data } = await axios.delete(`/api/groups/delete/${groupId}`);
+      if (data.success) {
+        setGroups((prev) => prev.filter((g) => g._id !== groupId));
+        if (selectedGroup && selectedGroup._id === groupId) {
+          setSelectedGroup(null);
+        }
+        toast.success("Group deleted successfully!");
+        return true;
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || error.message);
+    }
+    return false;
+  };
+
   const value = {
     messages,
     users,
@@ -386,6 +414,7 @@ export const ChatProvider = ({ children }) => {
     selectUserChat,
     selectGroupChat,
     clearSelection,
+    deleteGroup,
   };
 
   return (
