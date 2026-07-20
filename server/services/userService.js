@@ -9,7 +9,11 @@ import cloudinary from "../config/cloudinary.js";
 export const createUserSignup = async (fullName, email, password, bio) => {
   const existingUser = await User.findOne({ email });
   if (existingUser) {
-    throw new ApiError(400, "An account with this email already exists.");
+    if (existingUser.isVerified) {
+      throw new ApiError(400, "An account with this email already exists.");
+    } else {
+      await User.deleteOne({ _id: existingUser._id });
+    }
   }
 
   const salt = await bcrypt.genSalt(10);
