@@ -5,6 +5,7 @@ import LoginPage from "./pages/LoginPage";
 import ProfilePage from "./pages/ProfilePage";
 import { Toaster } from "react-hot-toast";
 import { AuthContext } from "../contex/AuthContex";
+import PWAInstallPrompt from "./components/PWAInstallPrompt";
 
 function App() {
   const { authUser } = React.useContext(AuthContext);
@@ -36,6 +37,7 @@ function App() {
           element={authUser ? <ProfilePage /> : <Navigate to="/login" />}
         />
       </Routes>
+      <PWAInstallPrompt />
     </div>
   );
 }
